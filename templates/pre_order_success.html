@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Order Submitted - Inventory Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
+        <h1 class="text-2xl font-bold text-purple-600 mb-6">Pre-Order Submitted</h1>
+        <p class="mb-4">Your pre-order for <strong>{{ product_name }}</strong> (Type: {{ type }}, Size: {{ size }}) - Quantity: {{ quantity }} has been submitted successfully.</p>
+        <a href="/transactions" class="text-blue-500 hover:underline">Back to Sell</a>
+    </div>
+</body>
+</html>

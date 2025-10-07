@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell - Inventory Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+        <nav class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-blue-600">Sell</h1>
+            <div class="space-x-4">
+                <a href="/inventory" class="text-blue-500 hover:underline">Inventory</a>
+                <a href="/add_product" class="text-blue-500 hover:underline">Add Product</a>
+                <a href="/requests" class="text-blue-500 hover:underline">Requests</a>
+                {% if is_admin %}
+                <a href="/users" class="text-blue-500 hover:underline">Users</a>
+                {% endif %}
+                <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+            </div>
+        </nav>
+        <p class="text-gray-700 mb-6">Logged in as: <strong>{{ username }}</strong></p>
+        
+        <!-- Barcode Scanner -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Scan Barcode</h2>
+            <div id="scanner" class="w-full h-64 bg-gray-200 rounded-lg"></div>
+            <input id="barcode-input" type="text" placeholder="Or enter barcode manually" 
+                   class="mt-4 w-full p-3 border rounded-lg">
+            <button onclick="fetchProduct()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Search</button>
+        </div>
+        
+        <!-- Modal -->
+        <div id="product-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
+            <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full animate-fade-in">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Product Details</h2>
+                <img id="product-photo" src="" alt="Product Photo" class="w-full h-48 object-contain mb-4 rounded">
+                <p><strong>Name:</strong> <span id="modal-name"></span></p>
+                <p><strong>Type:</strong> <span id="modal-type"></span></p>
+                <p><strong>Size:</strong> <span id="modal-size"></span></p>
+                <p><strong>Selling Price:</strong> $<span id="modal-selling_price"></span></p>
+                <p><strong>Stock:</strong> <span id="modal-stock"></span></p>
+                <div id="modal-actions" class="mt-4 flex space-x-2">
+                    <button id="sell-btn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Sell</button>
+                    <button onclick="showBuyForm()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">Buy</button>
+                    <button id="request-btn" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 hidden">Request</button>
+                    <button id="pre-order-btn" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 hidden">Pre Order</button>
+                </div>
+                <div id="buy-form" class="hidden mt-4">
+                    <input id="buy-quantity" type="number" min="1" placeholder="Quantity to buy" class="w-32 p-2 border rounded">
+                    <button onclick="buyProduct()" class="ml-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Confirm Buy</button>
+                </div>
+                <div id="qr-code" class="mt-4 hidden"></div>
+                <p id="qr-message" class="mt-2 text-sm text-gray-600 hidden">Scan to request this item</p>
+                <button onclick="closeModal()" class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+    </style>
+
+    <script>
+        let currentVariantId = '';
+        let currentSellingPrice = 0;
+
+        async function logout() {
+            const response = await fetch('/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            if (data.success) {
+                window.location.href = '/login';
+            }
+        }
+
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#scanner'),
+                constraints: { facingMode: "environment" }
+            },
+            decoder: { readers: ['ean_reader', 'upc_reader', 'code_128_reader'] }
+        }, function(err) {
+            if (err) { console.error(err); return; }
+            Quagga.start();
+        });
+
+        Quagga.onDetected(function(data) {
+            const barcode = data.codeResult.code;
+            document.getElementById('barcode-input').value = barcode;
+            fetchProduct();
+            Quagga.stop();
+        });
+
+        async function fetchProduct() {
+            const barcode = document.getElementById('barcode-input').value;
+            const response = await fetch('/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ barcode })
+            });
+            const data = await response.json();
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            currentVariantId = data.variant_id;
+            currentSellingPrice = data.selling_price;
+            document.getElementById('modal-name').textContent = data.name;
+            document.getElementById('modal-type').textContent = data.type;
+            document.getElementById('modal-size').textContent = data.size;
+            document.getElementById('modal-selling_price').textContent = data.selling_price;
+            document.getElementById('modal-stock').textContent = data.stock;
+            document.getElementById('product-photo').src = data.photo;
+            const qrDiv = document.getElementById('qr-code');
+            const qrMessage = document.getElementById('qr-message');
+            const requestBtn = document.getElementById('request-btn');
+            const preOrderBtn = document.getElementById('pre-order-btn');
+            qrDiv.innerHTML = '';
+            if (data.stock === 0) {
+                qrDiv.classList.remove('hidden');
+                qrMessage.classList.remove('hidden');
+                requestBtn.classList.remove('hidden');
+                preOrderBtn.classList.remove('hidden');
+                QRCode.toCanvas(document.createElement('canvas'), data.request_url, { width: 150 }, function(err, canvas) {
+                    if (err) console.error(err);
+                    qrDiv.appendChild(canvas);
+                });
+                requestBtn.onclick = () => window.location.href = data.request_url;
+                preOrderBtn.onclick = () => window.location.href = `/pre_order/${data.variant_id}`;
+            } else {
+                qrDiv.classList.add('hidden');
+                qrMessage.classList.add('hidden');
+                requestBtn.classList.add('hidden');
+                preOrderBtn.classList.add('hidden');
+            }
+            document.getElementById('sell-btn').onclick = () => sellProduct();
+            document.getElementById('buy-form').classList.add('hidden');
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        async function sellProduct() {
+            const response = await fetch('/transactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'sell', variant_id: currentVariantId, selling_price: currentSellingPrice })
+            });
+            const data = await response.json();
+            if (data.error) {
+                alert(data.error);
+                const qrDiv = document.getElementById('qr-code');
+                const qrMessage = document.getElementById('qr-message');
+                const requestBtn = document.getElementById('request-btn');
+                const preOrderBtn = document.getElementById('pre-order-btn');
+                qrDiv.classList.remove('hidden');
+                qrMessage.classList.remove('hidden');
+                requestBtn.classList.remove('hidden');
+                preOrderBtn.classList.remove('hidden');
+                qrDiv.innerHTML = '';
+                QRCode.toCanvas(document.createElement('canvas'), data.request_url, { width: 150 }, function(err, canvas) {
+                    if (err) console.error(err);
+                    qrDiv.appendChild(canvas);
+                });
+                requestBtn.onclick = () => window.location.href = data.request_url;
+                preOrderBtn.onclick = () => window.location.href = `/pre_order/${currentVariantId}`;
+                return;
+            }
+            document.getElementById('modal-stock').textContent = data.new_stock;
+            closeModal();
+        }
+
+        function showBuyForm() {
+            document.getElementById('buy-form').classList.toggle('hidden');
+        }
+
+        async function buyProduct() {
+            const quantity = parseInt(document.getElementById('buy-quantity').value);
+            if (!quantity || quantity < 1) {
+                alert('Enter a valid quantity');
+                return;
+            }
+            const response = await fetch('/transactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'buy', variant_id: currentVariantId, quantity })
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert(data.message);
+                closeModal();
+            } else {
+                alert(data.error || 'Failed to submit purchase request');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('product-modal').classList.add('hidden');
+            document.getElementById('barcode-input').value = '';
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow">
+        <h1 class="text-2xl font-bold mb-4">Inventory Dashboard</h1>
+        <p class="text-gray-700 mb-4">Logged in as: <strong>{{ username }}</strong></p>
+        <a href="/" class="text-blue-500 hover:underline mb-4 inline-block">Back to Main</a>
+        
+        {% if error %}
+        <p class="text-red-500 mb-4">{{ error }}</p>
+        {% endif %}
+        
+        <!-- Profit Summary -->
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold">Financial Summary</h2>
+            <p><strong>Total Revenue:</strong> ${{ '%.2f' % total_revenue }}</p>
+            <p><strong>Total Profit:</strong> ${{ '%.2f' % total_profit }}</p>
+        </div>
+        
+        <!-- Stock Table -->
+        <h2 class="text-lg font-semibold mb-2">Current Stock</h2>
+        <table class="w-full border-collapse border">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="border p-2">Product Name</th>
+                    <th class="border p-2">Type</th>
+                    <th class="border p-2">Size</th>
+                    <th class="border p-2">Cost</th>
+                    <th class="border p-2">Selling Price</th>
+                    <th class="border p-2">Stock</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in stock %}
+                <tr>
+                    <td class="border p-2">{{ item[0] }}</td>
+                    <td class="border p-2">{{ item[1] }}</td>
+                    <td class="border p-2">{{ item[4] }}</td>
+                    <td class="border p-2">${{ '%.2f' % item[2] }}</td>
+                    <td class="border p-2">${{ '%.2f' % item[3] }}</td>
+                    <td class="border p-2">{{ item[5] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

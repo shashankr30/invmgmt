@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requests - Inventory Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+        <nav class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-blue-600">Requests</h1>
+            <div class="space-x-4">
+                <a href="/inventory" class="text-blue-500 hover:underline">Inventory</a>
+                <a href="/add_product" class="text-blue-500 hover:underline">Add Product</a>
+                <a href="/transactions" class="text-blue-500 hover:underline">Sell</a>
+                {% if is_admin %}
+                <a href="/users" class="text-blue-500 hover:underline">Users</a>
+                {% endif %}
+                <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+            </div>
+        </nav>
+        <p class="text-gray-700 mb-6">Logged in as: <strong>{{ username }}</strong></p>
+        
+        {% if error %}
+        <p class="text-red-500 mb-4">{{ error }}</p>
+        {% endif %}
+        
+        <!-- Customer Requests -->
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Customer Requests</h2>
+        <table class="w-full border-collapse border mb-8">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="border p-3">Product Name</th>
+                    <th class="border p-3">Type</th>
+                    <th class="border p-3">Size</th>
+                    <th class="border p-3">Customer Name</th>
+                    <th class="border p-3">Contact Info</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in requests %}
+                <tr>
+                    <td class="border p-3">{{ request[1] }}</td>
+                    <td class="border p-3">{{ request[2] }}</td>
+                    <td class="border p-3">{{ request[3] }}</td>
+                    <td class="border p-3">{{ request[4] }}</td>
+                    <td class="border p-3">{{ request[5] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Pending Purchase Requests (Admin Only) -->
+        {% if is_admin %}
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Pending Purchase Requests</h2>
+        <table class="w-full border-collapse border">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="border p-3">Product Name</th>
+                    <th class="border p-3">Type</th>
+                    <th class="border p-3">Size</th>
+                    <th class="border p-3">Quantity</th>
+                    <th class="border p-3">Request Time</th>
+                    <th class="border p-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for purchase in purchases %}
+                <tr>
+                    <td class="border p-3">{{ purchase[1] }}</td>
+                    <td class="border p-3">{{ purchase[2] }}</td>
+                    <td class="border p-3">{{ purchase[3] }}</td>
+                    <td class="border p-3">{{ purchase[4] }}</td>
+                    <td class="border p-3">{{ purchase[5] }}</td>
+                    <td class="border p-3">
+                        <button onclick="approvePurchase('{{ purchase[0] }}')" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">Approve</button>
+                        <button onclick="rejectPurchase('{{ purchase[0] }}')" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Reject</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+
+    <script>
+        async function logout() {
+            const response = await fetch('/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            if (data.success) {
+                window.location.href = '/login';
+            }
+        }
+
+        async function approvePurchase(purchase_id) {
+            if (!confirm('Approve this purchase request?')) return;
+            const response = await fetch('/approve_purchase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ purchase_id })
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('Purchase request approved and stock updated!');
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to approve purchase');
+            }
+        }
+
+        async function rejectPurchase(purchase_id) {
+            if (!confirm('Reject this purchase request?')) return;
+            const response = await fetch('/reject_purchase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ purchase_id })
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('Purchase request rejected!');
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to reject purchase');
+            }
+        }
+    </script>
+</body>
+</html>

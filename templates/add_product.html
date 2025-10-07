@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Product - Inventory Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+        <nav class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-blue-600">Add Product</h1>
+            <div class="space-x-4">
+                <a href="/inventory" class="text-blue-500 hover:underline">Inventory</a>
+                <a href="/transactions" class="text-blue-500 hover:underline">Sell</a>
+                <a href="/requests" class="text-blue-500 hover:underline">Requests</a>
+                {% if is_admin %}
+                <a href="/users" class="text-blue-500 hover:underline">Users</a>
+                {% endif %}
+                <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+            </div>
+        </nav>
+        <p class="text-gray-700 mb-6">Logged in as: <strong>{{ username }}</strong></p>
+        
+        {% if error %}
+        <p class="text-red-500 mb-4">{{ error }}</p>
+        {% endif %}
+        
+        <!-- Add Product Form -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Add New Product</h2>
+            <form id="add-product-form" enctype="multipart/form-data">
+                <input id="add-name" name="name" type="text" placeholder="Product Name" class="w-full p-3 mb-4 border rounded-lg">
+                <div id="variants-container">
+                    <div class="variant mb-4 p-4 border rounded-lg">
+                        <div class="flex items-center mb-2">
+                            <input type="text" name="barcode_0" id="barcode_0" placeholder="Barcode" class="barcode w-full p-2 border rounded">
+                            <button type="button" onclick="startScanner(0)" class="ml-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Scan Barcode</button>
+                        </div>
+                        <div id="scanner_0" class="w-full h-48 bg-gray-200 rounded-lg hidden"></div>
+                        <input type="text" name="type_0" placeholder="Type (e.g., Home, Away)" class="type w-full p-2 mb-2 border rounded">
+                        <input type="text" name="size_0" placeholder="Size" class="size w-full p-2 mb-2 border rounded">
+                        <input type="number" step="0.01" name="cost_0" placeholder="Cost" class="cost w-full p-2 mb-2 border rounded">
+                        <input type="number" step="0.01" name="selling_price_0" placeholder="Selling Price" class="selling_price w-full p-2 mb-2 border rounded">
+                        <input type="number" name="stock_0" placeholder="Stock" class="stock w-full p-2 mb-2 border rounded">
+                        <input type="file" name="photo_0" accept="image/*" class="photo w-full p-2 mb-2 border rounded" required>
+                    </div>
+                </div>
+                <button type="button" onclick="addVariantField()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mb-4">Add Variant</button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Product</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let variantCount = 1;
+        let activeScanner = null;
+
+        async function logout() {
+            const response = await fetch('/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            if (data.success) {
+                window.location.href = '/login';
+            }
+        }
+
+        function addVariantField() {
+            const container = document.getElementById('variants-container');
+            const variantDiv = document.createElement('div');
+            variantDiv.className = 'variant mb-4 p-4 border rounded-lg';
+            variantDiv.innerHTML = `
+                <div class="flex items-center mb-2">
+                    <input type="text" name="barcode_${variantCount}" id="barcode_${variantCount}" placeholder="Barcode" class="barcode w-full p-2 border rounded">
+                    <button type="button" onclick="startScanner(${variantCount})" class="ml-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Scan Barcode</button>
+                </div>
+                <div id="scanner_${variantCount}" class="w-full h-48 bg-gray-200 rounded-lg hidden"></div>
+                <input type="text" name="type_${variantCount}" placeholder="Type (e.g., Home, Away)" class="type w-full p-2 mb-2 border rounded">
+                <input type="text" name="size_${variantCount}" placeholder="Size" class="size w-full p-2 mb-2 border rounded">
+                <input type="number" step="0.01" name="cost_${variantCount}" placeholder="Cost" class="cost w-full p-2 mb-2 border rounded">
+                <input type="number" step="0.01" name="selling_price_${variantCount}" placeholder="Selling Price" class="selling_price w-full p-2 mb-2 border rounded">
+                <input type="number" name="stock_${variantCount}" placeholder="Stock" class="stock w-full p-2 mb-2 border rounded">
+                <input type="file" name="photo_${variantCount}" accept="image/*" class="photo w-full p-2 mb-2 border rounded" required>
+            `;
+            container.appendChild(variantDiv);
+            variantCount++;
+        }
+
+        function startScanner(index) {
+            if (activeScanner !== null) {
+                Quagga.stop();
+                document.getElementById(`scanner_${activeScanner}`).classList.add('hidden');
+            }
+            activeScanner = index;
+            const scannerDiv = document.getElementById(`scanner_${index}`);
+            scannerDiv.classList.remove('hidden');
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: scannerDiv,
+                    constraints: { facingMode: "environment" }
+                },
+                decoder: { readers: ['ean_reader', 'upc_reader', 'code_128_reader'] }
+            }, function(err) {
+                if (err) { 
+                    console.error(err); 
+                    alert('Failed to initialize scanner');
+                    scannerDiv.classList.add('hidden');
+                    activeScanner = null;
+                    return; 
+                }
+                Quagga.start();
+            });
+            Quagga.onDetected(function(data) {
+                const barcode = data.codeResult.code;
+                document.getElementById(`barcode_${index}`).value = barcode;
+                Quagga.stop();
+                scannerDiv.classList.add('hidden');
+                activeScanner = null;
+            });
+        }
+
+        document.getElementById('add-product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (activeScanner !== null) {
+                Quagga.stop();
+                document.getElementById(`scanner_${activeScanner}`).classList.add('hidden');
+                activeScanner = null;
+            }
+            const formData = new FormData(e.target);
+            const response = await fetch('/add_product', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('Product added successfully!');
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to add product');
+            }
+        });
+    </script>
+</body>
+</html>
