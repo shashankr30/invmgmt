@@ -14,7 +14,7 @@
             <div class="space-x-4">
                 <a href="/inventory" class="text-blue-500 hover:underline">Inventory</a>
                 <a href="/transactions" class="text-blue-500 hover:underline">Sell</a>
-                <a href="/requests" class="text-blue-500 hover:underline">Requests</a>
+                <a href="/pre_orders" class="text-blue-500 hover:underline">Pre-orders</a>
                 {% if is_admin %}
                 <a href="/users" class="text-blue-500 hover:underline">Users</a>
                 {% endif %}
@@ -27,7 +27,6 @@
         <p class="text-red-500 mb-4">{{ error }}</p>
         {% endif %}
         
-        <!-- Add Product Form -->
         <div class="mb-8">
             <h2 class="text-xl font-semibold text-gray-700 mb-4">Add New Product</h2>
             <form id="add-product-form" enctype="multipart/form-data">
@@ -41,7 +40,9 @@
                         <div id="scanner_0" class="w-full h-48 bg-gray-200 rounded-lg hidden"></div>
                         <input type="text" name="type_0" placeholder="Type (e.g., Home, Away)" class="type w-full p-2 mb-2 border rounded">
                         <input type="text" name="size_0" placeholder="Size" class="size w-full p-2 mb-2 border rounded">
+                        {% if is_admin %}
                         <input type="number" step="0.01" name="cost_0" placeholder="Cost" class="cost w-full p-2 mb-2 border rounded">
+                        {% endif %}
                         <input type="number" step="0.01" name="selling_price_0" placeholder="Selling Price" class="selling_price w-full p-2 mb-2 border rounded">
                         <input type="number" name="stock_0" placeholder="Stock" class="stock w-full p-2 mb-2 border rounded">
                         <input type="file" name="photo_0" accept="image/*" class="photo w-full p-2 mb-2 border rounded" required>
@@ -80,7 +81,9 @@
                 <div id="scanner_${variantCount}" class="w-full h-48 bg-gray-200 rounded-lg hidden"></div>
                 <input type="text" name="type_${variantCount}" placeholder="Type (e.g., Home, Away)" class="type w-full p-2 mb-2 border rounded">
                 <input type="text" name="size_${variantCount}" placeholder="Size" class="size w-full p-2 mb-2 border rounded">
+                {% if is_admin %}
                 <input type="number" step="0.01" name="cost_${variantCount}" placeholder="Cost" class="cost w-full p-2 mb-2 border rounded">
+                {% endif %}
                 <input type="number" step="0.01" name="selling_price_${variantCount}" placeholder="Selling Price" class="selling_price w-full p-2 mb-2 border rounded">
                 <input type="number" name="stock_${variantCount}" placeholder="Stock" class="stock w-full p-2 mb-2 border rounded">
                 <input type="file" name="photo_${variantCount}" accept="image/*" class="photo w-full p-2 mb-2 border rounded" required>

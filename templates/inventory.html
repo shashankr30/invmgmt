@@ -13,7 +13,7 @@
             <div class="space-x-4">
                 <a href="/add_product" class="text-blue-500 hover:underline">Add Product</a>
                 <a href="/transactions" class="text-blue-500 hover:underline">Sell</a>
-                <a href="/requests" class="text-blue-500 hover:underline">Requests</a>
+                <a href="/pre_orders" class="text-blue-500 hover:underline">Pre-orders</a>
                 {% if is_admin %}
                 <a href="/users" class="text-blue-500 hover:underline">Users</a>
                 {% endif %}
@@ -26,18 +26,18 @@
         <p class="text-red-500 mb-4">{{ error }}</p>
         {% endif %}
         
-        <!-- Financial Summary -->
         <div class="mb-8">
             <h2 class="text-xl font-semibold text-gray-700 mb-4">Financial Summary</h2>
             <p><strong>Total Revenue:</strong> ${{ '%.2f' % total_revenue }}</p>
+            {% if is_admin %}
             <p><strong>Total Profit:</strong> ${{ '%.2f' % total_profit }}</p>
+            {% endif %}
             <div class="mt-4 space-x-4">
                 <a href="/export_inventory" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Export Inventory to Excel</a>
                 <a href="/export_sales" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Export Sales to Excel</a>
             </div>
         </div>
         
-        <!-- Stock Table -->
         <h2 class="text-xl font-semibold text-gray-700 mb-4">Current Stock</h2>
         {% if products %}
         <table class="w-full border-collapse border mb-8">
@@ -47,7 +47,9 @@
                     <th class="border p-3">Type</th>
                     <th class="border p-3">Size</th>
                     <th class="border p-3">Barcode</th>
+                    {% if is_admin %}
                     <th class="border p-3">Cost</th>
+                    {% endif %}
                     <th class="border p-3">Selling Price</th>
                     <th class="border p-3">Stock</th>
                     {% if is_admin %}
@@ -65,7 +67,9 @@
                     <td class="border p-3">{{ product.variants[0].type }}</td>
                     <td class="border p-3">{{ product.variants[0].size }}</td>
                     <td class="border p-3">{{ product.variants[0].barcode }}</td>
+                    {% if is_admin %}
                     <td class="border p-3">${{ '%.2f' % product.variants[0].cost }}</td>
+                    {% endif %}
                     <td class="border p-3">${{ '%.2f' % product.variants[0].selling_price }}</td>
                     <td class="border p-3">{{ product.variants[0].stock }}</td>
                     {% if is_admin %}
@@ -84,7 +88,9 @@
                     <td class="border p-3">{{ variant.type }}</td>
                     <td class="border p-3">{{ variant.size }}</td>
                     <td class="border p-3">{{ variant.barcode }}</td>
+                    {% if is_admin %}
                     <td class="border p-3">${{ '%.2f' % variant.cost }}</td>
+                    {% endif %}
                     <td class="border p-3">${{ '%.2f' % variant.selling_price }}</td>
                     <td class="border p-3">{{ variant.stock }}</td>
                     {% if is_admin %}
@@ -106,7 +112,6 @@
         <p class="text-gray-700 mb-4">No products available. Add products via the <a href="/add_product" class="text-blue-500 hover:underline">Add Product</a> page.</p>
         {% endif %}
         
-        <!-- Sales History -->
         <h2 class="text-xl font-semibold text-gray-700 mb-4">Sales History</h2>
         {% if sales %}
         <table class="w-full border-collapse border">
@@ -117,7 +122,9 @@
                     <th class="border p-3">Size</th>
                     <th class="border p-3">Quantity</th>
                     <th class="border p-3">Revenue</th>
+                    {% if is_admin %}
                     <th class="border p-3">Cost</th>
+                    {% endif %}
                     <th class="border p-3">Sale Time</th>
                 </tr>
             </thead>
@@ -129,7 +136,9 @@
                     <td class="border p-3">{{ sale[2] }}</td>
                     <td class="border p-3">{{ sale[3] }}</td>
                     <td class="border p-3">${{ '%.2f' % sale[4] }}</td>
+                    {% if is_admin %}
                     <td class="border p-3">${{ '%.2f' % sale[5] }}</td>
+                    {% endif %}
                     <td class="border p-3">{{ sale[6] }}</td>
                 </tr>
                 {% endfor %}

@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Requests - Inventory Management</title>
+    <title>Pre-orders - Inventory Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-6">
     <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
         <nav class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-blue-600">Requests</h1>
+            <h1 class="text-2xl font-bold text-blue-600">Pre-orders</h1>
             <div class="space-x-4">
                 <a href="/inventory" class="text-blue-500 hover:underline">Inventory</a>
                 <a href="/add_product" class="text-blue-500 hover:underline">Add Product</a>
@@ -26,8 +26,7 @@
         <p class="text-red-500 mb-4">{{ error }}</p>
         {% endif %}
         
-        <!-- Customer Requests -->
-        <h2 class="text-xl font-semibold text-gray-700 mb-4">Customer Requests</h2>
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Customer Pre-orders</h2>
         <table class="w-full border-collapse border mb-8">
             <thead>
                 <tr class="bg-gray-200">
@@ -36,22 +35,25 @@
                     <th class="border p-3">Size</th>
                     <th class="border p-3">Customer Name</th>
                     <th class="border p-3">Contact Info</th>
+                    <th class="border p-3">Quantity</th>
+                    <th class="border p-3">Pre-order Time</th>
                 </tr>
             </thead>
             <tbody>
-                {% for request in requests %}
+                {% for pre_order in pre_orders %}
                 <tr>
-                    <td class="border p-3">{{ request[1] }}</td>
-                    <td class="border p-3">{{ request[2] }}</td>
-                    <td class="border p-3">{{ request[3] }}</td>
-                    <td class="border p-3">{{ request[4] }}</td>
-                    <td class="border p-3">{{ request[5] }}</td>
+                    <td class="border p-3">{{ pre_order[1] }}</td>
+                    <td class="border p-3">{{ pre_order[2] }}</td>
+                    <td class="border p-3">{{ pre_order[3] }}</td>
+                    <td class="border p-3">{{ pre_order[4] }}</td>
+                    <td class="border p-3">{{ pre_order[5] }}</td>
+                    <td class="border p-3">{{ pre_order[6] }}</td>
+                    <td class="border p-3">{{ pre_order[7] }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         
-        <!-- Pending Purchase Requests (Admin Only) -->
         {% if is_admin %}
         <h2 class="text-xl font-semibold text-gray-700 mb-4">Pending Purchase Requests</h2>
         <table class="w-full border-collapse border">

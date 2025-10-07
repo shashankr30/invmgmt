@@ -399,7 +399,7 @@ def transactions():
             conn.execute('PRAGMA foreign_keys = ON')
             c = conn.cursor()
             if action == 'sell':
-                selling_price = request.json['selling_price']
+                selling_price = float(request.json['selling_price'])
                 c.execute("SELECT stock FROM variants WHERE variant_id = ?", (variant_id,))
                 stock = c.fetchone()[0]
                 if stock > 0:
@@ -517,9 +517,9 @@ def pre_order(variant_id):
         logger.error(f"Pre order error: {e}")
         return jsonify({'error': 'Database error'}), 500
 
-@app.route('/requests')
+@app.route('/pre_orders')
 @login_required
-def requests():
+def pre_orders():
     try:
         conn = sqlite3.connect('inventory.db')
         conn.execute('PRAGMA foreign_keys = ON')
